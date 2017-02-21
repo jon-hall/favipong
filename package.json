@@ -1,0 +1,27 @@
+{
+  "name": "favipong",
+  "version": "0.0.0",
+  "description": "favipong",
+  "main": "index.js",
+  "scripts": {
+    "build": "node ./build.js",
+    "build:full": "npm run copyhtml && npm run build",
+    "build:dev": "nodemon --watch src --exec \"npm run build:full\"",
+    "copyhtml": "cpx ./src/index.html ./dist/",
+    "dev": "concurrently \"npm start\" \"npm run build:dev\"",
+    "start": "node index.js",
+    "test": "echo \"LOL\""
+  },
+  "keywords": [
+    "favipong"
+  ],
+  "author": "Jon Hall <jon_hall@outlook.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^3.3.0",
+    "cpx": "^1.5.0",
+    "express": "^4.14.1",
+    "module-concat": "^2.1.2",
+    "nodemon": "^1.11.0"
+  }
+}
