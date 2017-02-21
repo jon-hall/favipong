@@ -19,6 +19,7 @@ async function getOffersFromFirebase() {
   return offers
 }
 
+// TODO: Proper handling of open offers for disconnected peers (offer expiry/retry on conect fail etc.)
 // TODO: Refactor these methods up a bit - we have some duplication and just general crustiness
 async function connectInitiator(offersRef) {
   return new Promise((resolve, reject) => {
