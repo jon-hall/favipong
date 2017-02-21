@@ -52,11 +52,17 @@ function __getDirname(path) {
 /********** Start module 0: H:\Programming\favipong\src\index.js **********/
 __modules[0] = function(module, exports) {
 const loadScript = __require(1,0)
+const debug = __require(2,0)
+const firePeer = __require(3,0)
 
+window.DEBUG = true
 async function start() {
   await loadScript('https://cdnjs.cloudflare.com/ajax/libs/simple-peer/6.4.3/simplepeer.min.js')
   await loadScript('https://www.gstatic.com/firebasejs/3.6.9/firebase.js')
-  alert('scripts loaded!')
+  debug('scripts loaded!')
+
+  const peer = await firePeer()
+  alert('got peer!')
 }
 
 start()
@@ -82,6 +88,162 @@ module.exports = function(src) {
 return module.exports;
 }
 /********** End of module 1: H:\Programming\favipong\src\js\script-loader.js **********/
+/********** Start module 2: H:\Programming\favipong\src\js\debug.js **********/
+__modules[2] = function(module, exports) {
+module.exports = function(msg, ...args) {
+  if(!window.DEBUG) {
+    return
+  }
+
+  console.log(`[favipong] ${msg}`, args)
+}
+
+return module.exports;
+}
+/********** End of module 2: H:\Programming\favipong\src\js\debug.js **********/
+/********** Start module 3: H:\Programming\favipong\src\js\fire-peer.js **********/
+__modules[3] = function(module, exports) {
+const config = __require(4,3)
+const debug = __require(2,3)
+
+async function getOffersFromFirebase() {
+  const firebaseConfig = {
+      apiKey: config.firebase.apiKey,
+      authDomain: config.firebase.authDomain,
+      databaseURL: config.firebase.databaseURL,
+      storageBucket: config.firebase.storageBucket,
+      messagingSenderId: config.firebase.senderId
+    }
+  firebase.initializeApp(firebaseConfig)
+
+  await firebase.auth().signInAnonymously()
+
+  const offers = await firebase.database()
+    .ref('/offers')
+
+  return offers
+}
+async function connectInitiator(offersRef) {
+  return new Promise((resolve, reject) => {
+    debug('no offers, connecting initiator peer...')
+
+    const initiator = new SimplePeer({
+      initiator: true,
+      trickle: false
+    })
+
+    debug('made peer', initiator)
+
+    initiator.on('error', (err) => {
+      debug('error', err)
+      reject(err)
+    })
+
+    let initOfferRef
+    initiator.on('signal', async function (data) {
+      debug('signal', data)
+
+      if(data.type !== 'offer') {
+        return
+      }
+      initOfferRef = await offersRef.push({ offer: data })
+      debug('stored offer to firebase', initOfferRef)
+
+      let isInitialValue = true
+      initOfferRef.on('value', function(snapshot) {
+        debug('init value')
+        if(isInitialValue) {
+          isInitialValue = false
+          return
+        }
+
+        const val = snapshot.val()
+        const counter = val && val.counter
+
+        if(!counter) {
+          return
+        }
+
+        debug('received counter', counter)
+        initOfferRef.off('value')
+        initiator.signal(counter)
+      })
+    })
+
+    initiator.on('connect', async function () {
+      debug('connect')
+      await initOfferRef.remove()
+
+      resolve(initiator)
+    })
+  })
+}
+
+function connectFollower(offers, offersRef) {
+  return new Promise((resolve, reject) => {
+    debug('offers :D', offers)
+
+    const follower = new SimplePeer({
+      initiator: false,
+      trickle: false
+    })
+    const targetOfferId = Object.keys(offers)[0]
+    follower.on('error', err => {
+      debug('error (follower)', err)
+      reject(err)
+    })
+
+    follower.on('signal', async function(data) {
+      debug('signal (follower)', data)
+
+      if(data.type !== 'answer') {
+        return
+      }
+      await offersRef.child(targetOfferId).update({ counter: data })
+    })
+
+    follower.on('connect', function () {
+      debug('connect (follower)')
+      resolve(follower)
+    })
+
+    const targetOffer = offers[targetOfferId].offer
+
+    debug('connecting (follower)', targetOffer)
+    follower.signal(targetOffer)
+  })
+}
+
+module.exports = async function connectToPeer() {
+  const offersRef = await getOffersFromFirebase()
+  const offersSnapshot = await offersRef.once('value')
+  const offers = offersSnapshot.val()
+
+  if(offers) {
+    return await connectFollower(offers, offersRef)
+  }
+
+  return await connectInitiator(offersRef)
+}
+
+return module.exports;
+}
+/********** End of module 3: H:\Programming\favipong\src\js\fire-peer.js **********/
+/********** Start module 4: H:\Programming\favipong\src\js\config.js **********/
+__modules[4] = function(module, exports) {
+module.exports = {
+  firebase: {
+    apiKey: 'AIzaSyDemDiurFrc9RloikuvntNcqspA4YFLI0M',
+    authDomain: 'favipong.firebaseapp.com',
+    databaseURL: 'https://favipong.firebaseio.com',
+    storageBucket: 'favipong.appspot.com',
+    senderId: '313594361579'
+  }
+}
+
+return module.exports;
+}
+/********** End of module 4: H:\Programming\favipong\src\js\config.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);
