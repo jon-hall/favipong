@@ -1,12 +1,7 @@
 class View {
-  constructor(canvas) {
+  constructor(canvas, favicon) {
     this.canvas = document.createElement('canvas')
     this.ctx = canvas.getContext('2d')
-
-    const favicon = document.createElement('link');
-    favicon.type = 'image/x-icon';
-    favicon.rel = 'shortcut icon';
-    document.getElementsByTagName('head')[0].appendChild(favicon)
     this.favicon = favicon
 
     this.objects = []
@@ -200,5 +195,5 @@ if(!window.DEBUG) {
   canvas.style.display = 'none'
 }
 
-const game = Game.create(canvas)
+const game = Game.create(canvas, document.querySelector('#favicon'))
 game.play()
