@@ -19,9 +19,9 @@ module.exports = class Game {
 
     this.stage.add(new Ball())
     this.stage.add(new LocalPaddle({
-      colour: 'red',
-      x: 1,
-      y: 7,
+      colour: 'orange',
+      x: 24,
+      y: 8,
     }))
   }
 

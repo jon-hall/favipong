@@ -263,9 +263,9 @@ module.exports = class Game {
 
     this.stage.add(new Ball())
     this.stage.add(new LocalPaddle({
-      colour: 'red',
-      x: 1,
-      y: 7,
+      colour: 'orange',
+      x: 24,
+      y: 8,
     }))
   }
 
@@ -388,6 +388,7 @@ return module.exports;
 /********** Start module 8: H:\Programming\favipong\src\js\favipong\objects\ball.js **********/
 __modules[8] = function(module, exports) {
 const GameObject = __require(10,8)
+const Paddle = __require(12,8)
 const Rectangle = __require(11,8)
 
 module.exports = class Ball extends GameObject {
@@ -418,6 +419,46 @@ module.exports = class Ball extends GameObject {
         break
     }
 
+    game.stage.allChildren.some(child => {
+      if(child instanceof Paddle) {
+        return this._tryCollidePaddle(child)
+      }
+    })
+  }
+
+  _tryCollidePaddle(paddle) {
+    const x1 = this.x
+    const y1 = this.y
+    const x2 = x1 + this.width
+    const y2 = y1 + this.height
+    const px1 = paddle.x
+    const py1 = paddle.y
+    const px2 = px1 + paddle.width
+    const py2 = py1 + paddle.height
+
+    const xOverlap = x1 <= px1 ?
+      x2 <= px1 ?
+        0 :
+        x2 - px1 :
+      x1 >= px2 ?
+        0 :
+        x1 - px2
+
+    const yOverlap = y1 <= py1 ?
+      y2 <= py1 ?
+        0 :
+        y2 - py1 :
+      y1 >= py2 ?
+        0 :
+        py2 - y1
+
+    if(!xOverlap || !yOverlap) {
+      return false
+    }
+    this.x -= xOverlap
+    this.vx *= -1
+
+    return true
   }
 }
 
@@ -651,7 +692,7 @@ module.exports = class Paddle extends GameObject {
     x,
     y,
     width = 3,
-    height = 12,
+    height = 11,
     speed = 1
   } = {}) {
     const visual = new Rectangle({ fill: colour })

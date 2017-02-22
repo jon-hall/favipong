@@ -76,7 +76,7 @@ destroy() {
     return { bounceX: x.bounce, bounceY: y.bounce }
   }
 
-  // Helper to deal with 'bouncing' inside the
+  // Helper to deal with 'bouncing' inside the game area
   _handleOverflow(elasticity, magnitude, size, lowerLimit, upperLimit, currentVelocity) {
     let position = magnitude
     let velocity = currentVelocity

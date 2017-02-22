@@ -7,7 +7,7 @@ module.exports = class Paddle extends GameObject {
     x,
     y,
     width = 3,
-    height = 12,
+    height = 11,
     speed = 1
   } = {}) {
     const visual = new Rectangle({ fill: colour })
