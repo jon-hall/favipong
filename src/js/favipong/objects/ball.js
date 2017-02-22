@@ -1,6 +1,7 @@
 const GameObject = require('./game-object.js')
 const Paddle = require('./paddle.js')
 const Rectangle = require('../visuals/rectangle.js')
+const STATES = require('../states.js')
 
 module.exports = class Ball extends GameObject {
   constructor({
@@ -11,15 +12,27 @@ module.exports = class Ball extends GameObject {
     super({
       visual,
       width: size,
-      height: size,
-      x: 14,
-      y: 14,
-      vx: 1,
-      vy: 0.5
+      height: size
     })
+
+    this.reset()
+  }
+
+  reset() {
+    this.x = 14
+    this.y = 14
+    // Randomly travel towards either player
+    this.vx = Math.random() < 0.5 ? -1 : 1
+    // Randomly travel up or down on the vertical
+    this.vy = 2 * (Math.random() - 0.5)
   }
 
   tick({ game }) {
+    // Ball can only move while playing
+    if(game.state !== STATES.PLAYING) {
+      return
+    }
+
     const result = this.adjustPosition({ game })
     switch(result.bounceX) {
       case 1:
@@ -48,29 +61,8 @@ module.exports = class Ball extends GameObject {
     const px2 = px1 + paddle.width
     const py2 = py1 + paddle.height
 
-    const xOverlap = x1 <= px1 ?
-      x2 <= px1 ?
-        // Ball is totally left of paddle
-        0 :
-        // Ball has hit left side of paddle (store overlap as positive)
-        x2 - px1 :
-      x1 >= px2 ?
-        // Ball is totally right of paddle
-        0 :
-        // Ball has hit paddle on right (store overlap as negative)
-        x1 - px2
-
-    const yOverlap = y1 <= py1 ?
-      y2 <= py1 ?
-        // Ball is totally above paddle
-        0 :
-        // Ball has hit top of paddle (store overlap as positive)
-        y2 - py1 :
-      y1 >= py2 ?
-        // Ball is totally below paddle
-        0 :
-        // Ball has hit paddle on bottom (store overlap as negative)
-        py2 - y1
+    const xOverlap = this._getOverlap(x1, x2, px1, px2)
+    const yOverlap = this._getOverlap(y1, y2, py1, py2)
 
     if(!xOverlap || !yOverlap) {
       // Not colliding along one axis
@@ -84,11 +76,26 @@ module.exports = class Ball extends GameObject {
 
     // Rather than fully 'reflect' the ball off the paddle instantly, if we position it exactly on
     // the paddle it 'feels' more like a hit
-    this.x -= xOverlap
+    this.x += xOverlap
 
     // Invert our x-velocity
     this.vx *= -1
 
     return true
+  }
+
+  // Gets overlap between two objects along a single axis
+  _getOverlap(aMin, aMax, bMin, bMax) {
+    return aMin <= bMin ?
+      aMax <= bMin ?
+        // a is totally 'before' b
+        0 :
+        // a has collided with the 'min' side of b (return as a negative overlap)
+        bMin - aMax :
+      aMin >= bMax ?
+        // a is totally 'after' b
+        0 :
+        // a has collided with the 'max' side of b
+        bMax - aMin
   }
 }

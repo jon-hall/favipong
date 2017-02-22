@@ -5,5 +5,9 @@ module.exports = {
     databaseURL: 'https://favipong.firebaseio.com',
     storageBucket: 'favipong.appspot.com',
     senderId: '313594361579'
+  },
+  palette: {
+    player1: 'rgb(0, 180, 255)',
+    player2: 'orange'
   }
 }

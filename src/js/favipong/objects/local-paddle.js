@@ -36,10 +36,6 @@ module.exports = class LocalPaddle extends Paddle {
     this._eventCleanup()
   }
 
-  tick({ game }) {
-    this.adjustPosition({ game, elasticity: 0 })
-  }
-
   onKeydown(event) {
     switch(event.which) {
       case this.upKey:

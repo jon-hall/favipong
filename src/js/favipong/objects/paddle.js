@@ -1,5 +1,6 @@
 const GameObject = require('./game-object.js')
 const Rectangle = require('../visuals/rectangle.js')
+const STATES = require('../states.js')
 
 module.exports = class Paddle extends GameObject {
   constructor({
@@ -24,6 +25,11 @@ module.exports = class Paddle extends GameObject {
   }
 
   tick({ game }) {
+    // Paddle can only move while playing
+    if(game.state !== STATES.PLAYING) {
+      return
+    }
+
     this.adjustPosition({ game, elasticity: 0 })
   }
 }

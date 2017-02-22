@@ -18,6 +18,8 @@ async function start() {
 
   const game = new Game({ canvas, favicon: document.querySelector('#favicon') })
   game.start()
+  // HACK: Set game state to playing for now
+  game.pushState(2)
 
   await loadScript('https://cdnjs.cloudflare.com/ajax/libs/simple-peer/6.4.3/simplepeer.min.js')
   await loadScript('https://www.gstatic.com/firebasejs/3.6.9/firebase.js')

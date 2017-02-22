@@ -10,7 +10,7 @@ module.exports = class GameObject {
     vy = 0
   } = {}) {
     this.visual = visual
-    this.children = []
+    this.children = children
     this.x = x
     this.y = y
     this.width = width
@@ -26,10 +26,16 @@ module.exports = class GameObject {
     )
   }
 
-destroy() {
-  // Default destroy just recursively destroys all children
-  this.children.forEach(child => child.destroy())
-}
+  destroy() {
+    // Default destroy just recursively destroys all children
+    this.children.forEach(child => child.destroy())
+  }
+
+  // TODO: Refactor out duplication in these recursive methods...
+  reset() {
+    // Default reset just recursively destroys all children
+    this.children.forEach(child => child.reset())
+  }
 
   add(object) {
     this.children.push(object)
@@ -111,12 +117,13 @@ destroy() {
     this.visual.draw({
       context,
       canvas,
+      object: this,
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height
     })
 
-    this.children.forEach(child => child.draw({ context, canvas }))
+    this.children.forEach(child => child.draw({ game, context, canvas }))
   }
 }

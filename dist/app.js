@@ -69,6 +69,7 @@ async function start() {
 
   const game = new Game({ canvas, favicon: document.querySelector('#favicon') })
   game.start()
+  game.pushState(2)
 
   await loadScript('https://cdnjs.cloudflare.com/ajax/libs/simple-peer/6.4.3/simplepeer.min.js')
   await loadScript('https://www.gstatic.com/firebasejs/3.6.9/firebase.js')
@@ -248,6 +249,8 @@ const STATES = __require(6,4)
 const Stage = __require(7,4)
 const Ball = __require(8,4)
 const LocalPaddle = __require(9,4)
+const Score = __require(10,4)
+const config = __require(5,4)
 
 module.exports = class Game {
   constructor({ canvas, favicon }) {
@@ -257,20 +260,25 @@ module.exports = class Game {
     this.height = canvas.height
 
     this.favicon = favicon
-    this.states = [STATES.SEARCHING]
+    this.states = [/*STATES.SEARCHING*/]
 
     this.reset()
 
-    this.stage.add(new Ball())
-    this.stage.add(new LocalPaddle({
-      colour: 'orange',
-      x: 24,
+    this.ball = new Ball()
+    this.stage.add(this.ball)
+    this.paddle1 = new LocalPaddle({
+      colour: config.palette.player1,
+      x: 1,
       y: 8,
-    }))
+    })
+    this.stage.add(this.paddle1)
+
+    this.scoreboard = new Score()
+    this.stage.add(this.scoreboard)
   }
 
   get state() {
-    return this.states[this.states.length - 1]
+    return this.states[this.states.length - 1] || STATES.PAUSED
   }
 
   start() {
@@ -327,7 +335,24 @@ module.exports = class Game {
   }
 
   score({ player }) {
-    console.log(`Player ${player} scored!`)
+    this.scoreboard.addScore({ player })
+    this.popState()
+    this.pushState(STATES.SHOW_SCORE)
+    setTimeout(() => {
+      this.popState()
+
+      this._resetServe()
+
+      setTimeout(() => {
+        this.pushState(STATES.PLAYING)
+      }, 1000)
+    }, 1000)
+  }
+
+  _resetServe() {
+    this.ball.reset()
+    this.paddle1.y = 8
+    this.paddle1.vy = 0
   }
 }
 
@@ -343,6 +368,10 @@ module.exports = {
     databaseURL: 'https://favipong.firebaseio.com',
     storageBucket: 'favipong.appspot.com',
     senderId: '313594361579'
+  },
+  palette: {
+    player1: 'rgb(0, 180, 255)',
+    player2: 'orange'
   }
 }
 
@@ -355,8 +384,9 @@ module.exports = {
   PAUSED: 0,
   SEARCHING: 1,
   PLAYING: 2,
-  COMPLETE: 3,
-  ERROR: 4
+  SHOW_SCORE: 3,
+  COMPLETE: 4,
+  ERROR: 5
 }
 
 return module.exports;
@@ -364,8 +394,8 @@ return module.exports;
 /********** End of module 6: H:\Programming\favipong\src\js\favipong\states.js **********/
 /********** Start module 7: H:\Programming\favipong\src\js\favipong\objects\stage.js **********/
 __modules[7] = function(module, exports) {
-const GameObject = __require(10,7)
-const Rectangle = __require(11,7)
+const GameObject = __require(11,7)
+const Rectangle = __require(12,7)
 
 module.exports = class Stage extends GameObject {
   constructor({
@@ -387,9 +417,10 @@ return module.exports;
 /********** End of module 7: H:\Programming\favipong\src\js\favipong\objects\stage.js **********/
 /********** Start module 8: H:\Programming\favipong\src\js\favipong\objects\ball.js **********/
 __modules[8] = function(module, exports) {
-const GameObject = __require(10,8)
-const Paddle = __require(12,8)
-const Rectangle = __require(11,8)
+const GameObject = __require(11,8)
+const Paddle = __require(13,8)
+const Rectangle = __require(12,8)
+const STATES = __require(6,8)
 
 module.exports = class Ball extends GameObject {
   constructor({
@@ -400,15 +431,24 @@ module.exports = class Ball extends GameObject {
     super({
       visual,
       width: size,
-      height: size,
-      x: 14,
-      y: 14,
-      vx: 1,
-      vy: 0.5
+      height: size
     })
+
+    this.reset()
+  }
+
+  reset() {
+    this.x = 14
+    this.y = 14
+    this.vx = Math.random() < 0.5 ? -1 : 1
+    this.vy = 2 * (Math.random() - 0.5)
   }
 
   tick({ game }) {
+    if(game.state !== STATES.PLAYING) {
+      return
+    }
+
     const result = this.adjustPosition({ game })
     switch(result.bounceX) {
       case 1:
@@ -436,29 +476,25 @@ module.exports = class Ball extends GameObject {
     const px2 = px1 + paddle.width
     const py2 = py1 + paddle.height
 
-    const xOverlap = x1 <= px1 ?
-      x2 <= px1 ?
-        0 :
-        x2 - px1 :
-      x1 >= px2 ?
-        0 :
-        x1 - px2
-
-    const yOverlap = y1 <= py1 ?
-      y2 <= py1 ?
-        0 :
-        y2 - py1 :
-      y1 >= py2 ?
-        0 :
-        py2 - y1
+    const xOverlap = this._getOverlap(x1, x2, px1, px2)
+    const yOverlap = this._getOverlap(y1, y2, py1, py2)
 
     if(!xOverlap || !yOverlap) {
       return false
     }
-    this.x -= xOverlap
+    this.x += xOverlap
     this.vx *= -1
 
     return true
+  }
+  _getOverlap(aMin, aMax, bMin, bMax) {
+    return aMin <= bMin ?
+      aMax <= bMin ?
+        0 :
+        bMin - aMax :
+      aMin >= bMax ?
+        0 :
+        bMax - aMin
   }
 }
 
@@ -467,8 +503,8 @@ return module.exports;
 /********** End of module 8: H:\Programming\favipong\src\js\favipong\objects\ball.js **********/
 /********** Start module 9: H:\Programming\favipong\src\js\favipong\objects\local-paddle.js **********/
 __modules[9] = function(module, exports) {
-const Paddle = __require(12,9)
-const Rectangle = __require(11,9)
+const Paddle = __require(13,9)
+const Rectangle = __require(12,9)
 const KEYCODE_UP_ARROW = 38
 const KEYCODE_DOWN_ARROW = 40
 
@@ -505,10 +541,6 @@ module.exports = class LocalPaddle extends Paddle {
     this._eventCleanup()
   }
 
-  tick({ game }) {
-    this.adjustPosition({ game, elasticity: 0 })
-  }
-
   onKeydown(event) {
     switch(event.which) {
       case this.upKey:
@@ -539,8 +571,101 @@ module.exports = class LocalPaddle extends Paddle {
 return module.exports;
 }
 /********** End of module 9: H:\Programming\favipong\src\js\favipong\objects\local-paddle.js **********/
-/********** Start module 10: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
+/********** Start module 10: H:\Programming\favipong\src\js\favipong\objects\score.js **********/
 __modules[10] = function(module, exports) {
+const GameObject = __require(11,10)
+const Text = __require(14,10)
+const Rectangle = __require(12,10)
+const STATES = __require(6,10)
+const config = __require(5,10)
+
+module.exports = class Score extends GameObject {
+  constructor({
+    x = 0,
+    y = 0,
+    width = 28,
+    height = 28
+  } = {}) {
+    const visual = new Rectangle({ fill: 'rgba(40, 40, 40, 0.7)' })
+
+    const fontSize = 23
+    const fontY = -1
+    super({
+      visual,
+      width,
+      height,
+      x,
+      y,
+      children: [
+        new Text({
+          x: 1,
+          y: fontY,
+          width: 11,
+          height: fontSize,
+          colour: config.palette.player1,
+          text: '0'
+        }),
+        new Text({
+          x: 12,
+          y: fontY - 2,
+          width: 4,
+          height: fontSize,
+          colour: 'rgb(250, 250, 250)',
+          text: '|'
+        }),
+        new Text({
+          x: 16,
+          y: fontY,
+          width: 11,
+          height: fontSize,
+          colour: config.palette.player2,
+          text: '0'
+        })
+      ]
+    })
+
+    this.scores = {
+      player1: 0,
+      player2: 0
+    }
+
+    this._refreshScoresText()
+  }
+
+  shouldDraw({ game }) {
+    return game.state === STATES.SHOW_SCORE
+  }
+
+  _refreshScoresText() {
+    this.children[0].text = `${this.scores.player1}`
+    this.children[2].text = `${this.scores.player2}`
+  }
+
+  reset() {
+    this.scores = {
+      player1: 0,
+      player2: 0
+    }
+
+    this._refreshScoresText()
+  }
+
+  addScore({ player }) {
+    if(player === 1) {
+      this.scores.player1++
+    } else if(player === 2) {
+      this.scores.player2++
+    }
+
+    this._refreshScoresText()
+  }
+}
+
+return module.exports;
+}
+/********** End of module 10: H:\Programming\favipong\src\js\favipong\objects\score.js **********/
+/********** Start module 11: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
+__modules[11] = function(module, exports) {
 module.exports = class GameObject {
   constructor({
     visual,
@@ -553,7 +678,7 @@ module.exports = class GameObject {
     vy = 0
   } = {}) {
     this.visual = visual
-    this.children = []
+    this.children = children
     this.x = x
     this.y = y
     this.width = width
@@ -569,9 +694,12 @@ module.exports = class GameObject {
     )
   }
 
-destroy() {
-  this.children.forEach(child => child.destroy())
-}
+  destroy() {
+    this.children.forEach(child => child.destroy())
+  }
+  reset() {
+    this.children.forEach(child => child.reset())
+  }
 
   add(object) {
     this.children.push(object)
@@ -641,22 +769,23 @@ destroy() {
     this.visual.draw({
       context,
       canvas,
+      object: this,
       x: this.x,
       y: this.y,
       width: this.width,
       height: this.height
     })
 
-    this.children.forEach(child => child.draw({ context, canvas }))
+    this.children.forEach(child => child.draw({ game, context, canvas }))
   }
 }
 
 return module.exports;
 }
-/********** End of module 10: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
-/********** Start module 11: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
-__modules[11] = function(module, exports) {
-const GameVisual = __require(13,11)
+/********** End of module 11: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
+/********** Start module 12: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
+__modules[12] = function(module, exports) {
+const GameVisual = __require(15,12)
 
 module.exports = class Rectangle extends GameVisual {
   constructor({
@@ -680,11 +809,12 @@ module.exports = class Rectangle extends GameVisual {
 
 return module.exports;
 }
-/********** End of module 11: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
-/********** Start module 12: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
-__modules[12] = function(module, exports) {
-const GameObject = __require(10,12)
-const Rectangle = __require(11,12)
+/********** End of module 12: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
+/********** Start module 13: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
+__modules[13] = function(module, exports) {
+const GameObject = __require(11,13)
+const Rectangle = __require(12,13)
+const STATES = __require(6,13)
 
 module.exports = class Paddle extends GameObject {
   constructor({
@@ -709,15 +839,51 @@ module.exports = class Paddle extends GameObject {
   }
 
   tick({ game }) {
+    if(game.state !== STATES.PLAYING) {
+      return
+    }
+
     this.adjustPosition({ game, elasticity: 0 })
   }
 }
 
 return module.exports;
 }
-/********** End of module 12: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
-/********** Start module 13: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
-__modules[13] = function(module, exports) {
+/********** End of module 13: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
+/********** Start module 14: H:\Programming\favipong\src\js\favipong\objects\text.js **********/
+__modules[14] = function(module, exports) {
+const GameObject = __require(11,14)
+const TextVisual = __require(16,14)
+const STATES = __require(6,14)
+
+module.exports = class Text extends GameObject {
+  constructor({
+    text,
+    colour,
+    x,
+    y,
+    width = 28 - x,
+    height = 12
+  } = {}) {
+    const visual = new TextVisual({ fill: colour })
+
+    super({
+      visual,
+      width,
+      height,
+      x,
+      y
+    })
+
+    this.text = text
+  }
+}
+
+return module.exports;
+}
+/********** End of module 14: H:\Programming\favipong\src\js\favipong\objects\text.js **********/
+/********** Start module 15: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
+__modules[15] = function(module, exports) {
 module.exports = class GameVisual {
   draw({ game, context, canvas, x, y, width, height }) {
     throw new Error('draw not implemented')
@@ -726,7 +892,40 @@ module.exports = class GameVisual {
 
 return module.exports;
 }
-/********** End of module 13: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
+/********** End of module 15: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
+/********** Start module 16: H:\Programming\favipong\src\js\favipong\visuals\text.js **********/
+__modules[16] = function(module, exports) {
+const GameVisual = __require(15,16)
+
+module.exports = class Text extends GameVisual {
+  constructor({
+    fill = 'white',
+    font = 'sans-serif',
+    fontWeight = 'bold'
+  } = {}) {
+    super()
+    this.fill = fill
+    this.font = font
+    this.fontWeight = fontWeight
+  }
+
+  draw({
+    context,
+    x,
+    y,
+    object,
+    width,
+    height
+  }) {
+    context.fillStyle = this.fill
+    context.font = `${this.fontWeight} ${height}px ${this.font}`
+    context.fillText(object.text, x, y + height, width)
+  }
+}
+
+return module.exports;
+}
+/********** End of module 16: H:\Programming\favipong\src\js\favipong\visuals\text.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);
