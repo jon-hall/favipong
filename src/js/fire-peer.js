@@ -1,6 +1,59 @@
 const config = require('./config.js')
 const debug = require('./debug.js')
 
+module.exports = class FirePeer {
+  async connect() {
+    if(this.peer) {
+      return
+    }
+
+    // TODO
+    const connection = await connectToPeer()
+    this.peer = connection.peer
+    this.master = connection.master
+  }
+
+  async disconnect() {
+    if(!this.peer) {
+      return
+    }
+
+    await new Promise((resolve) => this.peer.destroy(resolve))
+    this.peer = null
+  }
+
+  async send(data) {
+    if(!this.peer) {
+      throw new Error('not connected')
+    }
+
+    this.peer.send(JSON.stringify(data))
+  }
+
+  onData(fn) {
+    if(!this.peer) {
+      throw new Error('not connected')
+    }
+
+    this.peer.on('data', data => fn(JSON.parse(data)))
+  }
+
+  async onNextData(filter) {
+    return new Promise((resolve) => {
+      const handler = (data) => {
+        const parsed = JSON.parse(data)
+
+        if(!filter || filter(parsed)) {
+          this.peer.removeListener('data', handler)
+          resolve(parsed)
+        }
+      }
+
+      this.peer.on('data', handler)
+    })
+  }
+}
+
 async function getOffersFromFirebase() {
   const firebaseConfig = {
       apiKey: config.firebase.apiKey,
@@ -21,6 +74,7 @@ async function getOffersFromFirebase() {
 
 // TODO: Proper handling of open offers for disconnected peers (offer expiry/retry on conect fail etc.)
 // TODO: Refactor these methods up a bit - we have some duplication and just general crustiness
+// (also bring them into the FirePeer class...)
 async function connectInitiator(offersRef) {
   return new Promise((resolve, reject) => {
     debug('no offers, connecting initiator peer...')
@@ -81,7 +135,7 @@ async function connectInitiator(offersRef) {
       // remove our offer from firebase
       await initOfferRef.remove()
 
-      resolve(initiator)
+      resolve({ peer: initiator, master: true })
     })
   })
 }
@@ -115,7 +169,7 @@ function connectFollower(offers, offersRef) {
 
     follower.on('connect', function () {
       debug('connect (follower)')
-      resolve(follower)
+      resolve({ peer: follower, master: false })
     })
 
     const targetOffer = offers[targetOfferId].offer
@@ -125,7 +179,7 @@ function connectFollower(offers, offersRef) {
   })
 }
 
-module.exports = async function connectToPeer() {
+async function connectToPeer() {
   const offersRef = await getOffersFromFirebase()
   const offersSnapshot = await offersRef.once('value')
   const offers = offersSnapshot.val()

@@ -36,10 +36,10 @@ module.exports = class Ball extends GameObject {
     const result = this.adjustPosition({ game })
     switch(result.bounceX) {
       case 1:
-        game.score({ player: 1 })
+        game.addScore({ player: 1 })
         break
       case -1:
-        game.score({ player: 2 })
+        game.addScore({ player: 2 })
         break
     }
 
@@ -49,6 +49,11 @@ module.exports = class Ball extends GameObject {
         return this._tryCollidePaddle(child)
       }
     })
+  }
+
+  setPeer(peer) {
+    // TODO: Handle sending/retrieving info to/from our peer
+
   }
 
   _tryCollidePaddle(paddle) {

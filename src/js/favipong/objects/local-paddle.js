@@ -36,6 +36,10 @@ module.exports = class LocalPaddle extends Paddle {
     this._eventCleanup()
   }
 
+  setPeer(peer) {
+    // TODO: Store peer so we can pipe events to it
+  }
+
   onKeydown(event) {
     switch(event.which) {
       case this.upKey:
