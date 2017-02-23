@@ -14,6 +14,8 @@ module.exports = class Game {
     this.width = canvas.width
     this.height = canvas.height
 
+    // TODO: Implement our 'abandon' key combo...
+    this.__faviconCache = favicon.href
     this.favicon = favicon
 
     this.peer = firepeer
@@ -195,9 +197,10 @@ module.exports = class Game {
     this.pushState(STATES.SHOW_SCORE)
 
     // Show the score for 1 second, reset serve, pause for 1 more second, then start again
-    // TODO: This is crude and probably has synchronisation issues...
-    // But then again, the whole network-sync thing is currently being ignored, so will deal with
-    // if/when I address that...
+
+    // TODO: Coordinate this via our peer
+    // If local player scored, then send score message, await ack, then update score
+    // If remote scored, await score message, then update score and respond with ack
     setTimeout(async () => {
       this.popState()
 

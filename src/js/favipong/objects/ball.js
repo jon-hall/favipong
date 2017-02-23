@@ -51,11 +51,6 @@ module.exports = class Ball extends GameObject {
     })
   }
 
-  setPeer(peer) {
-    // TODO: Handle sending/retrieving info to/from our peer
-
-  }
-
   _tryCollidePaddle(paddle) {
     const x1 = this.x
     const y1 = this.y

@@ -34,10 +34,24 @@ module.exports = class LocalPaddle extends Paddle {
 
   destroy() {
     this._eventCleanup()
+
+    // TODO: Disconnect from peer?
   }
 
   setPeer(peer) {
     // TODO: Store peer so we can pipe events to it
+  }
+
+  hit({ ball }) {
+    // TODO: If we have a peer attached, then send the hit event (with paddle + ball data)
+
+  }
+
+  tick({ game }) {
+    super.tick({ game })
+
+    // TODO: If we have a peer, then send updated state to them
+
   }
 
   onKeydown(event) {

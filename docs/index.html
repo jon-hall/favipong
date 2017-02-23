@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>favipong</title>
+        <style media="screen">
+            html,body {
+                height: 100%;
+                background-color: rgb(0, 0, 0);
+            }
+
+            .outer-wrap {
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .outer-wrap.absolute {
+                position: absolute;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                pointer-events: none;
+            }
+
+            .link {
+                width: 1280px;
+                height: 240px;
+                text-decoration: none !important;
+                color: transparent;
+            }
+
+            .link:hover {
+                box-shadow: rgba(30, 255, 80, 0.1) 0 0 20px;
+            }
+
+            .inner-wrap {
+                display: inline-block;
+                padding: 20px;
+                padding-bottom: 30px;
+                cursor: pointer;
+                border-radius: 10px;
+                pointer-events: none;
+            }
+
+            .glow {
+                display: inline-block;
+                font-size: 20px;
+                flex: 0;
+                color: transparent;
+                transition: color 0.5s ease-out;
+            }
+
+            .explain {
+                color: rgba(30, 255, 80, 0.2);
+                font: 15px sans-serif;
+                text-align: center;
+                padding: 20px;
+                position: absolute;
+                width: 100%;
+            }
+
+            .inner-wrap:hover
+            .inner-wrap:hover > .glow {
+                color: rgba(30, 255, 80, 0.9);
+            }
+
+            .glow:nth-child(1) {
+                animation: 0.3s ease-in-out infinite glowing;
+            }
+
+            .glow:nth-child(2) {
+                animation: 0.2s ease-in-out 0.1s infinite glowing;
+            }
+
+            .glow:nth-child(3) {
+                animation: 0.2s ease-in-out infinite glowing;
+            }
+
+            .glow:nth-child(4) {
+                animation: 0.3s ease-in-out infinite glowing;
+            }
+
+            .glow:nth-child(5) {
+                animation: 0.4s ease-in-out 0.1s infinite glowing;
+            }
+
+            .glow:nth-child(6) {
+                animation: 0.3s ease-in-out infinite glowing;
+            }
+
+            .glow:nth-child(7) {
+                animation: 0.2s ease-in-out infinite glowing;
+            }
+
+            .glow:nth-child(8) {
+                animation: 0.3s ease-in-out 0.1s infinite glowing;
+            }
+
+            @keyframes glowing {
+                0% {
+                    text-shadow: rgb(30, 255, 80) 0 0 5px;
+                }
+                50% {
+                    text-shadow: rgb(30, 255, 80) 0 0 3px;
+                }
+                100% {
+                    text-shadow: rgb(30, 255, 80) 0 0 5px;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="explain">Drag the link below to your bookmark bar</div>
+        <div class="outer-wrap">
+            <a id="link" href="#" title="favipong" class="link">favipong</a>
+        </div>
+        <div class="outer-wrap absolute">
+            <div class="inner-wrap">
+<pre class="glow">
+    ______
+   /\  ___\
+   \ \  __\
+    \ \_\
+     \/_/
+</pre>
+<pre class="glow">
+    ______
+   /\  __ \
+   \ \  __ \
+    \ \_\ \_\
+     \/_/\/_/
+</pre>
+<pre class="glow">
+    __   __
+   /\ \ / /
+   \ \ \'/
+    \ \__|
+     \/_/
+</pre>
+<pre class="glow">
+    __
+   /\ \
+   \ \ \
+    \ \_\
+     \/_/
+</pre>
+<pre class="glow">
+    ______
+   /\  == \
+   \ \  _-/
+    \ \_\
+     \/_/
+</pre>
+<pre class="glow">
+    ______
+   /\  __ \
+   \ \ \/\ \
+    \ \_____\
+     \/_____/
+</pre>
+<pre class="glow">
+    __   __
+   /\ "-.\ \
+   \ \ \-.  \
+    \ \_\\"\_\
+     \/_/ \/_/
+</pre>
+<pre class="glow">
+    ______
+   /\  ___\
+   \ \ \__ \
+    \ \_____\
+     \/_____/
+</pre>
+            </a>
+        </div>
+        <script src="js/index.js" charset="utf-8"></script>
+        <script type="text/javascript">
+            // Create our script-loading bookmarklet
+            document.querySelector('#link').href = 'javascript:(function()%7Bfunction%20callback()%7Balert(%22test!%22)%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22' +
+            encodeURIComponent(window.location.href.replace('index.html', '') + 'js/index.js') +
+            '%22%3Bif(s.addEventListener)%7Bs.addEventListener(%22load%22%2Ccallback%2Cfalse)%7Delse%20if(s.readyState)%7Bs.onreadystatechange%3Dcallback%7Ddocument.body.appendChild(s)%3B%7D)()'
+        </script>
+    </body>
+</html>

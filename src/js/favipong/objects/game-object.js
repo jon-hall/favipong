@@ -31,7 +31,7 @@ module.exports = class GameObject {
     this.children.forEach(child => child.destroy())
   }
 
-  // TODO: Refactor out duplication in these recursive methods...
+  // BACKLOG: Refactor out duplication in these recursive methods...
   reset() {
     // Default reset just recursively destroys all children
     this.children.forEach(child => child.reset())

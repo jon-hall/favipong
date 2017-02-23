@@ -7,7 +7,6 @@ module.exports = class FirePeer {
       return
     }
 
-    // TODO
     const connection = await connectToPeer()
     this.peer = connection.peer
     this.master = connection.master
@@ -73,7 +72,7 @@ async function getOffersFromFirebase() {
 }
 
 // TODO: Proper handling of open offers for disconnected peers (offer expiry/retry on conect fail etc.)
-// TODO: Refactor these methods up a bit - we have some duplication and just general crustiness
+// BACKLOG: Refactor these methods up a bit - we have some duplication and just general crustiness
 // (also bring them into the FirePeer class...)
 async function connectInitiator(offersRef) {
   return new Promise((resolve, reject) => {

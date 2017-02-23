@@ -32,4 +32,8 @@ module.exports = class Paddle extends GameObject {
 
     this.adjustPosition({ game, elasticity: 0 })
   }
+
+  hit({ ball }) {
+
+  }
 }
