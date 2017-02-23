@@ -202,6 +202,9 @@ module.exports = class Game {
     }
   }
 
+  // TODO: Does the state-stack really serve a purpose in this game, seems like complexity which
+  // adds nothing of value so far... (our state machine is small and the transitions fairly well
+  // defined, so a stack is likely overkill)
   pushState(state) {
     this.states.push(state)
   }
@@ -211,8 +214,12 @@ module.exports = class Game {
   }
 
   async addScore({ player }) {
+    debug('addScore')
     // Pop out of playing state (into paused state) while we sync scores
-    this.popState()
+    while(this.state !== STATES.PAUSED) {
+      this.popState()
+    }
+    debug('addScore:paused')
 
     if(!this._isPlayerLocal(player)) {
       // When we think remote player scored, we bail, and allow their 'score' message to trigger an

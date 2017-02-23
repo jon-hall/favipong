@@ -12,8 +12,11 @@ module.exports = class FirePeer {
     this.peer = connection.peer
     this.master = connection.master
 
+    this.handlers = []
+
     this.peer.on('error', console.error)
     this.peer.on('close', () => console.error('peer closed'))
+    this.peer.on('data', (data) => this._onData(data))
   }
 
   async disconnect() {
@@ -35,32 +38,66 @@ module.exports = class FirePeer {
     await this.peer.send(JSON.stringify(data))
   }
 
+  _onData(data) {
+    const parsed = JSON.parse(data)
+    const remove = []
+
+    this.handlers.forEach((handler) => {
+      let passed = true
+
+      if(typeof handler.test === 'function') {
+        passed = handler.test(parsed)
+      }
+
+      if(!passed) {
+        return
+      }
+
+      if(handler.once) {
+        remove.push(handler)
+      }
+
+      handler.fn(parsed)
+    })
+
+    remove.forEach((removed) => this._removeHandler(removed))
+  }
+
+  _removeHandler(handler) {
+    const index = this.handlers.indexOf(handler)
+
+    if(index >= 0) {
+      this.handlers.splice(index, 1)
+      return true
+    }
+
+    return false
+  }
+
   onData(fn) {
     debug('firepeer:onData')
     if(!this.peer) {
       throw new Error('not connected')
     }
 
-    this.peer.on('data', data => fn(JSON.parse(data)))
+    this.handlers.push({ fn })
   }
 
-  async onNextData(filter, timeout = 500) {
+  async onNextData(test, timeout = 500) {
     debug('firepeer:onNextData')
     return new Promise((resolve, reject) => {
-      const handler = (data) => {
-        const parsed = JSON.parse(data)
-
-        if(!filter || filter(parsed)) {
-          this.peer.removeListener('data', handler)
-          resolve(parsed)
-        }
+      const handler = {
+        fn: resolve,
+        once: true,
+        test
       }
 
-      this.peer.on('data', handler)
+      this.handlers.push(handler)
 
       setTimeout(() => {
-        this.peer.removeListener('data', handler)
-        reject('timeout')
+        if(this._removeHandler(handler)) {
+          reject('timeout')
+        }
       }, timeout)
     })
   }
