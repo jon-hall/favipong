@@ -97,6 +97,16 @@ module.exports = class Ball extends GameObject {
     // Invert our x-velocity
     this.vx *= -1
 
+    // Adjust our y-velocity based on the paddle, to allow for 'spin'
+    const adjust = Math.sign(this.vy) === Math.sign(paddle.vy) ?
+      // If the paddle is moving the same direction as the ball on the y-axis, the velocity change
+      // will be additive, so dampen it to prevent things getting crazy
+      paddle.vy / (1 + Math.abs(this.vy)) :
+      // Else, the paddle is cancelling some of our momentum, so just allow to do so wholesale
+      paddle.vy
+
+    this.vy += adjust
+
     return true
   }
 
