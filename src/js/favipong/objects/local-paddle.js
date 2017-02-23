@@ -35,16 +35,18 @@ module.exports = class LocalPaddle extends Paddle {
   destroy() {
     this._eventCleanup()
 
-    if(this.peer) {
-      this.peer.disconnect()
-    }
+    // TODO: Temp disabled
+    // if(this.peer) {
+    //   this.peer.disconnect()
+    // }
   }
 
   setPeer(peer) {
-    if(this.peer && this.peer !== peer) {
-      // Clean up the peer we're replacing (this is async, but we don't need to wait on it...do we?)
-      this.peer.disconnect()
-    }
+    // TODO: Temp disabled
+    // if(this.peer && this.peer !== peer) {
+    //   // Clean up the peer we're replacing (this is async, but we don't need to wait on it...do we?)
+    //   this.peer.disconnect()
+    // }
 
     this.peer = peer
   }

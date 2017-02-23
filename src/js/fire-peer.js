@@ -3,6 +3,7 @@ const debug = require('./debug.js')
 
 module.exports = class FirePeer {
   async connect() {
+    debug('firepeer:connect')
     if(this.peer) {
       return
     }
@@ -10,9 +11,13 @@ module.exports = class FirePeer {
     const connection = await connectToPeer()
     this.peer = connection.peer
     this.master = connection.master
+
+    this.peer.on('error', console.error)
+    this.peer.on('close', () => console.error('peer closed'))
   }
 
   async disconnect() {
+    debug('firepeer:disconnect')
     if(!this.peer) {
       return
     }
@@ -22,14 +27,16 @@ module.exports = class FirePeer {
   }
 
   async send(data) {
+    // debug('firepeer:send')
     if(!this.peer) {
       throw new Error('not connected')
     }
 
-    this.peer.send(JSON.stringify(data))
+    await this.peer.send(JSON.stringify(data))
   }
 
   onData(fn) {
+    debug('firepeer:onData')
     if(!this.peer) {
       throw new Error('not connected')
     }
@@ -37,8 +44,9 @@ module.exports = class FirePeer {
     this.peer.on('data', data => fn(JSON.parse(data)))
   }
 
-  async onNextData(filter) {
-    return new Promise((resolve) => {
+  async onNextData(filter, timeout = 500) {
+    debug('firepeer:onNextData')
+    return new Promise((resolve, reject) => {
       const handler = (data) => {
         const parsed = JSON.parse(data)
 
@@ -49,6 +57,11 @@ module.exports = class FirePeer {
       }
 
       this.peer.on('data', handler)
+
+      setTimeout(() => {
+        this.peer.removeListener('data', handler)
+        reject('timeout')
+      }, timeout)
     })
   }
 }
@@ -103,7 +116,7 @@ async function connectInitiator(offersRef) {
       debug('stored offer to firebase', initOfferRef)
 
       let isInitialValue = true
-      initOfferRef.on('value', function(snapshot) {
+      initOfferRef.on('value', async function(snapshot) {
         debug('init value')
         if(isInitialValue) {
           // Ignore the initial value
@@ -120,6 +133,9 @@ async function connectInitiator(offersRef) {
 
         debug('received counter', counter)
 
+        // remove our offer from firebase, so it doesn't interfere with other users
+        await initOfferRef.remove()
+
         // we've completed our offer-counter cycle, so unsubscribe
         initOfferRef.off('value')
 
@@ -130,9 +146,6 @@ async function connectInitiator(offersRef) {
 
     initiator.on('connect', async function () {
       debug('connect')
-
-      // remove our offer from firebase
-      await initOfferRef.remove()
 
       resolve({ peer: initiator, master: true })
     })
@@ -182,9 +195,17 @@ async function connectToPeer() {
   const offersRef = await getOffersFromFirebase()
   const offersSnapshot = await offersRef.once('value')
   const offers = offersSnapshot.val()
+  const filteredOffers = Object.keys(offers || {}).reduce((filtered, key) => {
+    // Filter to only offers without a counter
+    if(!offers[key].counter) {
+      filtered[key] = offers[key]
+    }
 
-  if(offers) {
-    return await connectFollower(offers, offersRef)
+    return filtered
+  }, {})
+
+  if(Object.keys(filteredOffers).length) {
+    return await connectFollower(filteredOffers, offersRef)
   }
 
   return await connectInitiator(offersRef)

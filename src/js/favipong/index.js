@@ -171,18 +171,33 @@ module.exports = class Game {
     paddle.y = 8
   }
 
-  _onPeerData(event) {
+  async _onPeerData(event) {
     switch(event.type) {
       case 'serve':
-        this._serveSyncData = event.data
+        // If we get this and we're master then something is fishy so ignore it
+        if(this.peer.master) {
+          return
+        }
+
+        // Else, configure our serve and respond with an ack message
+        this._configureServe(event.data)
+        await this.peer.send({ type: 'serve-ack' })
+        this._doServe()
         break
 
       // TODO: Handle tick/score/hit data events (some of these can be handled in the affected objects...)
       case 'score':
+        if(this._isPlayerLocal(event.data.player)) {
+          // Getting a score event from the local player is clearly some kind of error...
+          return
+        }
+
+        // Send back our ack
+        await this.peer.send({ type: 'score-ack' })
+
         // Make sure our scores match (this is super hack proof...)
         this.scoreboard.setScores(event.data.scores)
-        // Send back our ack
-        this.peer.send({ type: 'score-ack' })
+        this._displayScores()
         break
     }
   }
@@ -196,6 +211,9 @@ module.exports = class Game {
   }
 
   async addScore({ player }) {
+    // Pop out of playing state (into paused state) while we sync scores
+    this.popState()
+
     if(!this._isPlayerLocal(player)) {
       // When we think remote player scored, we bail, and allow their 'score' message to trigger an
       // update
@@ -204,7 +222,7 @@ module.exports = class Game {
 
     // When local player scores, we send a message to our peer to inform them and wait on an ack
     try {
-      await this.confirmScoreRemote({ player })
+      await this._confirmScoreRemote({ player })
     } catch(ex) {
       // Unable to confirm, so put game in error state and bail
       this.pushState(STATES.ERROR)
@@ -229,9 +247,6 @@ module.exports = class Game {
   }
 
   _displayScores() {
-    // Pop out of playing state (into paused state)
-    this.popState()
-
     // Push into the score display state
     this.pushState(STATES.SHOW_SCORE)
 
@@ -244,12 +259,10 @@ module.exports = class Game {
       this.popState()
 
       await this._resetServe()
-
-      this._doServe()
     }, 1000)
   }
 
-  async confirmScoreRemote({ player }) {
+  async _confirmScoreRemote({ player }) {
     // Send a message to peer detailing score event, and the resulting scores
     const player1 = this.scoreboard.scores.player1 + (player === 1 ? 1 : 0)
     const player2 = this.scoreboard.scores.player2 + (player === 2 ? 1 : 0)
@@ -257,6 +270,7 @@ module.exports = class Game {
     await this.peer.send({
       type: 'score',
       data: {
+        player,
         scores: {
           player1,
           player2
@@ -264,64 +278,59 @@ module.exports = class Game {
       }
     })
 
+    debug('_confirmScoreRemote: awaiting ack')
     // Wait on a 'score-ack' response
     await this.peer.onNextData((data) => data.type === 'score-ack')
+    debug('_confirmScoreRemote: got ack')
+  }
+
+  async _resetServe() {
+    if(!this.peer || !this.peer.master) {
+      // No peer, or not master, so we don't get to configure serve
+      return
+    }
+
+    await this._configureServeRemote()
+    this._doServe()
+  }
+
+  async _configureServeRemote() {
+    // Reset our ball, and send it's configuration to remote, then await the ack response
+    debug('_configureServeRemote')
+    this.ball.reset()
+    this._setupPaddles()
+
+    await this.peer.send({
+      type: 'serve',
+      data: {
+        ball: {
+          x: this.ball.x,
+          y: this.ball.y,
+          vx: this.ball.vx,
+          vy: this.ball.vy
+        }
+        // TODO: Paddle data too?
+      }
+    })
+
+    debug('_configureServeRemote: awaiting ack')
+    await this.peer.onNextData((data) => data.type === 'serve-ack')
+    debug('_configureServeRemote: got ack')
+  }
+
+  _configureServe(serveData) {
+    this.ball.x = serveData.ball.x
+    this.ball.y = serveData.ball.y
+    this.ball.vx = serveData.ball.vx
+    this.ball.vy = serveData.ball.vy
+
+    // TODO: Configure paddles from data?  For now do a naive reset on remote/non-master
+    this._setupPaddles()
   }
 
   _doServe() {
     setTimeout(() => {
       this.pushState(STATES.PLAYING)
-      this._serveSyncData = null
     }, 1000)
-  }
-
-  async _resetServe(resetPaddles = true) {
-    debug('resetServe')
-    this.ball.reset()
-
-    if(resetPaddles) {
-      this._setupPaddles()
-    }
-
-    // Sync ball state from master to non-master
-    if(this.peer.master) {
-      await this.peer.send({
-        type: 'serve',
-        data: {
-          ball: {
-            x: this.ball.x,
-            y: this.ball.y,
-            vx: this.ball.vx,
-            vy: this.ball.vy
-          }
-        }
-      })
-
-      debug('resetServe: master sent')
-      await this.peer.onNextData((data) => data.type === 'serve-ack')
-      debug('resetServe: master ack')
-      return
-    }
-
-    // If we haven't already got sync info from master, then wait for it
-    if(!this._serveSyncData) {
-      debug('resetServe: non-master wait')
-      await this.peer.onNextData((data) => data.type === 'serve')
-    }
-
-    debug('resetServe: non-master received')
-    await this._syncServe()
-  }
-
-  async _syncServe() {
-    debug('_syncServe')
-    this.ball.x = this._serveSyncData.ball.x
-    this.ball.y = this._serveSyncData.ball.y
-    this.ball.vx = this._serveSyncData.ball.vx
-    this.ball.vy = this._serveSyncData.ball.vy
-
-    this._serveSyncData = null
-
-    await this.peer.send({ type: 'serve-ack' })
   }
 }
