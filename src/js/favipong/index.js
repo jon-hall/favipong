@@ -5,6 +5,7 @@ const LocalPaddle = require('./objects/local-paddle.js')
 const RemotePaddle = require('./objects/remote-paddle.js')
 const Score = require('./objects/score.js')
 const config = require('../config.js')
+const debug = require('../debug.js')
 
 module.exports = class Game {
   constructor({ canvas, favicon, firepeer }) {
@@ -44,6 +45,8 @@ module.exports = class Game {
     // Prepare the game for launch by pushing the 'searching' state, then the 'paused' state
     this.pushState(STATES.SEARCHING)
     this.pushState(STATES.PAUSED)
+
+    debug('game constructed')
   }
 
   get state() {
@@ -113,9 +116,11 @@ module.exports = class Game {
       return
     }
 
+    debug('_trySearch')
     this._searching = true
     try {
       await this.peer.connect()
+      debug('_trySearch: connected')
 
       this.peer.onData((data) => this._onPeerData(data))
 
@@ -210,6 +215,7 @@ module.exports = class Game {
   }
 
   async _resetServe(resetPaddles = true) {
+    debug('resetServe')
     this.ball.reset()
 
     if(resetPaddles) {
@@ -230,18 +236,24 @@ module.exports = class Game {
         }
       })
 
+      debug('resetServe: master sent')
       await this.peer.onNextData((data) => data.type === 'serve-ack')
+      debug('resetServe: master ack')
+      return
     }
 
     // If we haven't already got sync info from master, then wait for it
     if(!this._serveSyncData) {
+      debug('resetServe: non-master wait')
       await this.peer.onNextData((data) => data.type === 'serve')
     }
 
+    debug('resetServe: non-master received')
     await this._syncServe()
   }
 
   async _syncServe() {
+    debug('_syncServe')
     this.ball.x = this._serveSyncData.ball.x
     this.ball.y = this._serveSyncData.ball.y
     this.ball.vx = this._serveSyncData.ball.vx

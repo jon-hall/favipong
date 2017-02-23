@@ -305,6 +305,7 @@ const LocalPaddle = __require(9,4)
 const RemotePaddle = __require(10,4)
 const Score = __require(11,4)
 const config = __require(5,4)
+const debug = __require(2,4)
 
 module.exports = class Game {
   constructor({ canvas, favicon, firepeer }) {
@@ -342,6 +343,8 @@ module.exports = class Game {
     this.stage.add(this.scoreboard)
     this.pushState(STATES.SEARCHING)
     this.pushState(STATES.PAUSED)
+
+    debug('game constructed')
   }
 
   get state() {
@@ -408,9 +411,11 @@ module.exports = class Game {
       return
     }
 
+    debug('_trySearch')
     this._searching = true
     try {
       await this.peer.connect()
+      debug('_trySearch: connected')
 
       this.peer.onData((data) => this._onPeerData(data))
       this._setupPaddles()
@@ -485,6 +490,7 @@ module.exports = class Game {
   }
 
   async _resetServe(resetPaddles = true) {
+    debug('resetServe')
     this.ball.reset()
 
     if(resetPaddles) {
@@ -503,16 +509,22 @@ module.exports = class Game {
         }
       })
 
+      debug('resetServe: master sent')
       await this.peer.onNextData((data) => data.type === 'serve-ack')
+      debug('resetServe: master ack')
+      return
     }
     if(!this._serveSyncData) {
+      debug('resetServe: non-master wait')
       await this.peer.onNextData((data) => data.type === 'serve')
     }
 
+    debug('resetServe: non-master received')
     await this._syncServe()
   }
 
   async _syncServe() {
+    debug('_syncServe')
     this.ball.x = this._serveSyncData.ball.x
     this.ball.y = this._serveSyncData.ball.y
     this.ball.vx = this._serveSyncData.ball.vx
