@@ -33,7 +33,16 @@ module.exports = class Paddle extends GameObject {
     this.adjustPosition({ game, elasticity: 0 })
   }
 
-  hit({ ball }) {
+  shouldDraw({ game }) {
+    // Don't draw in any of the following states
+    return [
+      STATES.SEARCHING,
+      STATES.COMPLETE,
+      STATES.ERROR
+    ].indexOf(game.state) < 0
+  }
 
+  hit({ ball }) {
+    // No-op on base class (that way remote paddle won't explode...)
   }
 }

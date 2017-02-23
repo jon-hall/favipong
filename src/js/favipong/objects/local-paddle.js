@@ -35,23 +35,65 @@ module.exports = class LocalPaddle extends Paddle {
   destroy() {
     this._eventCleanup()
 
-    // TODO: Disconnect from peer?
+    if(this.peer) {
+      this.peer.disconnect()
+    }
   }
 
   setPeer(peer) {
-    // TODO: Store peer so we can pipe events to it
+    if(this.peer && this.peer !== peer) {
+      // Clean up the peer we're replacing (this is async, but we don't need to wait on it...do we?)
+      this.peer.disconnect()
+    }
+
+    this.peer = peer
   }
 
   hit({ ball }) {
     // TODO: If we have a peer attached, then send the hit event (with paddle + ball data)
+    if(!this.peer) {
+      return
+    }
 
+    // Send our peer paddle and ball data to force a sync after a hit
+    this.peer.send({
+      type: 'hit',
+      data: {
+        paddle: {
+          x: this.x,
+          y: this.y,
+          vx: this.vx,
+          vy: this.vy
+        },
+        ball: {
+          x: ball.x,
+          y: ball.y,
+          vx: ball.vx,
+          vy: ball.vy
+        }
+      }
+    })
   }
 
   tick({ game }) {
     super.tick({ game })
 
-    // TODO: If we have a peer, then send updated state to them
+    // If we have a peer, then send updated state to them
+    if(!this.peer) {
+      return
+    }
 
+    this.peer.send({
+      type: 'tick',
+      data: {
+        paddle: {
+          x: this.x,
+          y: this.y,
+          vx: this.vx,
+          vy: this.vy
+        }
+      }
+    })
   }
 
   onKeydown(event) {

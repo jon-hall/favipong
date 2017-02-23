@@ -75,12 +75,30 @@ module.exports = class Score extends GameObject {
     this._refreshScoresText()
   }
 
+  setScoreColours(master) {
+    // If we're master then local is on left and remote on right, else vice-versa
+    this.children[0].visual.fill = master ?
+      config.palette.players.local :
+      config.palette.players.remote
+
+    this.children[2].visual.fill = master ?
+      config.palette.players.remote :
+      config.palette.players.local
+  }
+
   addScore({ player }) {
     if(player === 1) {
       this.scores.player1++
     } else if(player === 2) {
       this.scores.player2++
     }
+
+    this._refreshScoresText()
+  }
+
+  setScores({ player1, player2 }) {
+    this.scores.player1 = player1
+    this.scores.player2 = player2
 
     this._refreshScoresText()
   }

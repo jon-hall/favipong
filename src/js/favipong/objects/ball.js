@@ -27,6 +27,15 @@ module.exports = class Ball extends GameObject {
     this.vy = 2 * (Math.random() - 0.5)
   }
 
+  shouldDraw({ game }) {
+    // Don't draw in any of the following states
+    return [
+      STATES.SEARCHING,
+      STATES.COMPLETE,
+      STATES.ERROR
+    ].indexOf(game.state) < 0
+  }
+
   tick({ game }) {
     // Ball can only move while playing
     if(game.state !== STATES.PLAYING) {
@@ -45,8 +54,15 @@ module.exports = class Ball extends GameObject {
 
     game.stage.allChildren.some(child => {
       if(child instanceof Paddle) {
+        const hit = this._tryCollidePaddle(child)
+
+        if(hit) {
+          // If we hit a paddle, let the paddle know
+          child.hit({ ball: this })
+        }
+
         // Shortcut, since we can't possibly collide multiple paddles
-        return this._tryCollidePaddle(child)
+        return hit
       }
     })
   }

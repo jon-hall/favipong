@@ -28,14 +28,14 @@ module.exports = class Game {
     this.stage.add(this.ball)
 
     this.localPaddle = new LocalPaddle({
-      colour: config.palette.player1,
+      colour: config.palette.players.local,
       x: 1,
       y: 8,
     })
     this.stage.add(this.localPaddle)
 
     this.remotePaddle = new RemotePaddle({
-      colour: config.palette.player2,
+      colour: config.palette.players.remote,
       x: 24,
       y: 8,
     })
@@ -122,12 +122,17 @@ module.exports = class Game {
     this._searching = true
     try {
       await this.peer.connect()
+      // Found a peer, so leave searching state
+      this.popState()
+      // Enter paused state while we set things up
+      this.pushState(STATES.PAUSED)
       debug('_trySearch: connected')
 
       this.peer.onData((data) => this._onPeerData(data))
 
       // Now we have our peer we can reconfigure our paddles
       this._setupPaddles()
+      this.scoreboard.setScoreColours(this.peer.master)
 
       // Then setup a serve
       await this._resetServe()
@@ -157,25 +162,28 @@ module.exports = class Game {
   }
 
   _setupPaddle1(paddle) {
-    paddle.fill = config.palette.player1
     paddle.x = 1
     paddle.y = 8
   }
 
   _setupPaddle2(paddle) {
-    paddle.fill = config.palette.player2
     paddle.x = 24
     paddle.y = 8
   }
 
-  _onPeerData(data) {
-    switch(data.type) {
+  _onPeerData(event) {
+    switch(event.type) {
       case 'serve':
-        this._serveSyncData = data.data
+        this._serveSyncData = event.data
         break
 
       // TODO: Handle tick/score/hit data events (some of these can be handled in the affected objects...)
-
+      case 'score':
+        // Make sure our scores match (this is super hack proof...)
+        this.scoreboard.setScores(event.data.scores)
+        // Send back our ack
+        this.peer.send({ type: 'score-ack' })
+        break
     }
   }
 
@@ -187,9 +195,40 @@ module.exports = class Game {
     this.states.pop()
   }
 
-  addScore({ player }) {
-    this.scoreboard.addScore({ player })
+  async addScore({ player }) {
+    if(!this._isPlayerLocal(player)) {
+      // When we think remote player scored, we bail, and allow their 'score' message to trigger an
+      // update
+      return
+    }
 
+    // When local player scores, we send a message to our peer to inform them and wait on an ack
+    try {
+      await this.confirmScoreRemote({ player })
+    } catch(ex) {
+      // Unable to confirm, so put game in error state and bail
+      this.pushState(STATES.ERROR)
+      return
+    }
+
+    // We managed to confirm score update with remote - so apply update
+    this.scoreboard.addScore({ player })
+    this._displayScores()
+  }
+
+  _isPlayerLocal(player) {
+    if(player === 1 && this.peer && this.peer.master) {
+      return true
+    }
+
+    if(player === 2 && this.peer && !this.peer.master) {
+      return true
+    }
+
+    return false
+  }
+
+  _displayScores() {
     // Pop out of playing state (into paused state)
     this.popState()
 
@@ -208,6 +247,25 @@ module.exports = class Game {
 
       this._doServe()
     }, 1000)
+  }
+
+  async confirmScoreRemote({ player }) {
+    // Send a message to peer detailing score event, and the resulting scores
+    const player1 = this.scoreboard.scores.player1 + (player === 1 ? 1 : 0)
+    const player2 = this.scoreboard.scores.player2 + (player === 2 ? 1 : 0)
+
+    await this.peer.send({
+      type: 'score',
+      data: {
+        scores: {
+          player1,
+          player2
+        }
+      }
+    })
+
+    // Wait on a 'score-ack' response
+    await this.peer.onNextData((data) => data.type === 'score-ack')
   }
 
   _doServe() {

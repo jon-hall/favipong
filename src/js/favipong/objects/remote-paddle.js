@@ -16,11 +16,24 @@ module.exports = class RemotePaddle extends Paddle {
     })
   }
 
-  destroy() {
-    // TODO: Disconnect from peer?
-  }
+  // TODO: Track hit so we can compare our values with the sent values + extrapolate a correction
+  // if we're out of sync...? (simply adjusting when we get a 'hit' signal will cause backwards
+  // 'time jumps')
 
   setPeer(peer) {
-    // TODO: Attach event listener to update state when peer sends us data
+    // Attach listener to update state when peer sends us data
+    peer.onData((event) => this.onPeerData(event))
+  }
+
+  onPeerData(event) {
+    switch(event.type) {
+      case 'tick':
+        // Update our position and velocity to match where the peer syas they are
+        this.x = event.data.paddle.x
+        this.y = event.data.paddle.y
+        this.vx = event.data.paddle.vx
+        this.vy = event.data.paddle.vy
+        break
+    }
   }
 }

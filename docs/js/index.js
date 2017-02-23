@@ -49,7 +49,7 @@ function __getDirname(path) {
 	return require("path").resolve(__dirname + "/" + path + "/../");
 }
 /********** End of header **********/
-/********** Start module 0: C:\Repos\favipong\src\index.js **********/
+/********** Start module 0: H:\Programming\favipong\src\index.js **********/
 __modules[0] = function(module, exports) {
 const loadScript = __require(1,0)
 const debug = __require(2,0)
@@ -85,8 +85,8 @@ start()
 
 return module.exports;
 }
-/********** End of module 0: C:\Repos\favipong\src\index.js **********/
-/********** Start module 1: C:\Repos\favipong\src\js\script-loader.js **********/
+/********** End of module 0: H:\Programming\favipong\src\index.js **********/
+/********** Start module 1: H:\Programming\favipong\src\js\script-loader.js **********/
 __modules[1] = function(module, exports) {
 module.exports = function(src) {
   return new Promise((resolve, reject) => {
@@ -103,8 +103,8 @@ module.exports = function(src) {
 
 return module.exports;
 }
-/********** End of module 1: C:\Repos\favipong\src\js\script-loader.js **********/
-/********** Start module 2: C:\Repos\favipong\src\js\debug.js **********/
+/********** End of module 1: H:\Programming\favipong\src\js\script-loader.js **********/
+/********** Start module 2: H:\Programming\favipong\src\js\debug.js **********/
 __modules[2] = function(module, exports) {
 module.exports = function(msg, ...args) {
   if(!window.DEBUG) {
@@ -116,8 +116,8 @@ module.exports = function(msg, ...args) {
 
 return module.exports;
 }
-/********** End of module 2: C:\Repos\favipong\src\js\debug.js **********/
-/********** Start module 3: C:\Repos\favipong\src\js\fire-peer.js **********/
+/********** End of module 2: H:\Programming\favipong\src\js\debug.js **********/
+/********** Start module 3: H:\Programming\favipong\src\js\fire-peer.js **********/
 __modules[3] = function(module, exports) {
 const config = __require(5,3)
 const debug = __require(2,3)
@@ -127,6 +127,7 @@ module.exports = class FirePeer {
     if(this.peer) {
       return
     }
+
     const connection = await connectToPeer()
     this.peer = connection.peer
     this.master = connection.master
@@ -295,8 +296,8 @@ async function connectToPeer() {
 
 return module.exports;
 }
-/********** End of module 3: C:\Repos\favipong\src\js\fire-peer.js **********/
-/********** Start module 4: C:\Repos\favipong\src\js\favipong\index.js **********/
+/********** End of module 3: H:\Programming\favipong\src\js\fire-peer.js **********/
+/********** Start module 4: H:\Programming\favipong\src\js\favipong\index.js **********/
 __modules[4] = function(module, exports) {
 const STATES = __require(6,4)
 const Stage = __require(7,4)
@@ -313,7 +314,7 @@ module.exports = class Game {
     this.context = canvas.getContext('2d')
     this.width = canvas.width
     this.height = canvas.height
-
+    this.__faviconCache = favicon.href
     this.favicon = favicon
 
     this.peer = firepeer
@@ -538,8 +539,8 @@ module.exports = class Game {
 
 return module.exports;
 }
-/********** End of module 4: C:\Repos\favipong\src\js\favipong\index.js **********/
-/********** Start module 5: C:\Repos\favipong\src\js\config.js **********/
+/********** End of module 4: H:\Programming\favipong\src\js\favipong\index.js **********/
+/********** Start module 5: H:\Programming\favipong\src\js\config.js **********/
 __modules[5] = function(module, exports) {
 module.exports = {
   firebase: {
@@ -557,8 +558,8 @@ module.exports = {
 
 return module.exports;
 }
-/********** End of module 5: C:\Repos\favipong\src\js\config.js **********/
-/********** Start module 6: C:\Repos\favipong\src\js\favipong\states.js **********/
+/********** End of module 5: H:\Programming\favipong\src\js\config.js **********/
+/********** Start module 6: H:\Programming\favipong\src\js\favipong\states.js **********/
 __modules[6] = function(module, exports) {
 module.exports = {
   PAUSED: 0,
@@ -571,8 +572,8 @@ module.exports = {
 
 return module.exports;
 }
-/********** End of module 6: C:\Repos\favipong\src\js\favipong\states.js **********/
-/********** Start module 7: C:\Repos\favipong\src\js\favipong\objects\stage.js **********/
+/********** End of module 6: H:\Programming\favipong\src\js\favipong\states.js **********/
+/********** Start module 7: H:\Programming\favipong\src\js\favipong\objects\stage.js **********/
 __modules[7] = function(module, exports) {
 const GameObject = __require(12,7)
 const Rectangle = __require(13,7)
@@ -594,8 +595,8 @@ module.exports = class Stage extends GameObject {
 
 return module.exports;
 }
-/********** End of module 7: C:\Repos\favipong\src\js\favipong\objects\stage.js **********/
-/********** Start module 8: C:\Repos\favipong\src\js\favipong\objects\ball.js **********/
+/********** End of module 7: H:\Programming\favipong\src\js\favipong\objects\stage.js **********/
+/********** Start module 8: H:\Programming\favipong\src\js\favipong\objects\ball.js **********/
 __modules[8] = function(module, exports) {
 const GameObject = __require(12,8)
 const Paddle = __require(14,8)
@@ -646,10 +647,6 @@ module.exports = class Ball extends GameObject {
     })
   }
 
-  setPeer(peer) {
-
-  }
-
   _tryCollidePaddle(paddle) {
     const x1 = this.x
     const y1 = this.y
@@ -684,8 +681,8 @@ module.exports = class Ball extends GameObject {
 
 return module.exports;
 }
-/********** End of module 8: C:\Repos\favipong\src\js\favipong\objects\ball.js **********/
-/********** Start module 9: C:\Repos\favipong\src\js\favipong\objects\local-paddle.js **********/
+/********** End of module 8: H:\Programming\favipong\src\js\favipong\objects\ball.js **********/
+/********** Start module 9: H:\Programming\favipong\src\js\favipong\objects\local-paddle.js **********/
 __modules[9] = function(module, exports) {
 const Paddle = __require(14,9)
 const Rectangle = __require(13,9)
@@ -728,6 +725,15 @@ module.exports = class LocalPaddle extends Paddle {
   setPeer(peer) {
   }
 
+  hit({ ball }) {
+
+  }
+
+  tick({ game }) {
+    super.tick({ game })
+
+  }
+
   onKeydown(event) {
     switch(event.which) {
       case this.upKey:
@@ -757,8 +763,8 @@ module.exports = class LocalPaddle extends Paddle {
 
 return module.exports;
 }
-/********** End of module 9: C:\Repos\favipong\src\js\favipong\objects\local-paddle.js **********/
-/********** Start module 10: C:\Repos\favipong\src\js\favipong\objects\remote-paddle.js **********/
+/********** End of module 9: H:\Programming\favipong\src\js\favipong\objects\local-paddle.js **********/
+/********** Start module 10: H:\Programming\favipong\src\js\favipong\objects\remote-paddle.js **********/
 __modules[10] = function(module, exports) {
 const Paddle = __require(14,10)
 const Rectangle = __require(13,10)
@@ -787,8 +793,8 @@ module.exports = class RemotePaddle extends Paddle {
 
 return module.exports;
 }
-/********** End of module 10: C:\Repos\favipong\src\js\favipong\objects\remote-paddle.js **********/
-/********** Start module 11: C:\Repos\favipong\src\js\favipong\objects\score.js **********/
+/********** End of module 10: H:\Programming\favipong\src\js\favipong\objects\remote-paddle.js **********/
+/********** Start module 11: H:\Programming\favipong\src\js\favipong\objects\score.js **********/
 __modules[11] = function(module, exports) {
 const GameObject = __require(12,11)
 const Text = __require(15,11)
@@ -880,8 +886,8 @@ module.exports = class Score extends GameObject {
 
 return module.exports;
 }
-/********** End of module 11: C:\Repos\favipong\src\js\favipong\objects\score.js **********/
-/********** Start module 12: C:\Repos\favipong\src\js\favipong\objects\game-object.js **********/
+/********** End of module 11: H:\Programming\favipong\src\js\favipong\objects\score.js **********/
+/********** Start module 12: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
 __modules[12] = function(module, exports) {
 module.exports = class GameObject {
   constructor({
@@ -999,8 +1005,8 @@ module.exports = class GameObject {
 
 return module.exports;
 }
-/********** End of module 12: C:\Repos\favipong\src\js\favipong\objects\game-object.js **********/
-/********** Start module 13: C:\Repos\favipong\src\js\favipong\visuals\rectangle.js **********/
+/********** End of module 12: H:\Programming\favipong\src\js\favipong\objects\game-object.js **********/
+/********** Start module 13: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
 __modules[13] = function(module, exports) {
 const GameVisual = __require(16,13)
 
@@ -1026,8 +1032,8 @@ module.exports = class Rectangle extends GameVisual {
 
 return module.exports;
 }
-/********** End of module 13: C:\Repos\favipong\src\js\favipong\visuals\rectangle.js **********/
-/********** Start module 14: C:\Repos\favipong\src\js\favipong\objects\paddle.js **********/
+/********** End of module 13: H:\Programming\favipong\src\js\favipong\visuals\rectangle.js **********/
+/********** Start module 14: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
 __modules[14] = function(module, exports) {
 const GameObject = __require(12,14)
 const Rectangle = __require(13,14)
@@ -1062,12 +1068,16 @@ module.exports = class Paddle extends GameObject {
 
     this.adjustPosition({ game, elasticity: 0 })
   }
+
+  hit({ ball }) {
+
+  }
 }
 
 return module.exports;
 }
-/********** End of module 14: C:\Repos\favipong\src\js\favipong\objects\paddle.js **********/
-/********** Start module 15: C:\Repos\favipong\src\js\favipong\objects\text.js **********/
+/********** End of module 14: H:\Programming\favipong\src\js\favipong\objects\paddle.js **********/
+/********** Start module 15: H:\Programming\favipong\src\js\favipong\objects\text.js **********/
 __modules[15] = function(module, exports) {
 const GameObject = __require(12,15)
 const TextVisual = __require(17,15)
@@ -1098,8 +1108,8 @@ module.exports = class Text extends GameObject {
 
 return module.exports;
 }
-/********** End of module 15: C:\Repos\favipong\src\js\favipong\objects\text.js **********/
-/********** Start module 16: C:\Repos\favipong\src\js\favipong\visuals\game-visual.js **********/
+/********** End of module 15: H:\Programming\favipong\src\js\favipong\objects\text.js **********/
+/********** Start module 16: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
 __modules[16] = function(module, exports) {
 module.exports = class GameVisual {
   draw({ game, context, canvas, x, y, width, height }) {
@@ -1109,8 +1119,8 @@ module.exports = class GameVisual {
 
 return module.exports;
 }
-/********** End of module 16: C:\Repos\favipong\src\js\favipong\visuals\game-visual.js **********/
-/********** Start module 17: C:\Repos\favipong\src\js\favipong\visuals\text.js **********/
+/********** End of module 16: H:\Programming\favipong\src\js\favipong\visuals\game-visual.js **********/
+/********** Start module 17: H:\Programming\favipong\src\js\favipong\visuals\text.js **********/
 __modules[17] = function(module, exports) {
 const GameVisual = __require(16,17)
 
@@ -1142,7 +1152,7 @@ module.exports = class Text extends GameVisual {
 
 return module.exports;
 }
-/********** End of module 17: C:\Repos\favipong\src\js\favipong\visuals\text.js **********/
+/********** End of module 17: H:\Programming\favipong\src\js\favipong\visuals\text.js **********/
 /********** Footer **********/
 if(typeof module === "object")
 	module.exports = __require(0);

@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "node ./build.js",
+    "build:gh-pages": "node ./build.js --ghp",
     "build:full": "npm run copyhtml && npm run build",
     "build:dev": "nodemon --watch src --exec \"npm run build:full\"",
     "copyhtml": "cpx ./src/index.html ./dist/",

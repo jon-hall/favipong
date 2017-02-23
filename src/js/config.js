@@ -7,7 +7,9 @@ module.exports = {
     senderId: '313594361579'
   },
   palette: {
-    player1: 'rgb(0, 180, 255)',
-    player2: 'orange'
+    players: {
+      local: 'rgb(0, 180, 255)',
+      remote: 'orange'
+    }
   }
 }
