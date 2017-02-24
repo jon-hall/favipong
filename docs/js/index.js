@@ -1059,7 +1059,7 @@ const Text = __require(16,11)
 const Rectangle = __require(14,11)
 const STATES = __require(6,11)
 const config = __require(5,11)
-const firstTo = 3
+const firstTo = 9
 
 module.exports = class Score extends GameObject {
   constructor({

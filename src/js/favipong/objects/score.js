@@ -3,7 +3,7 @@ const Text = require('./text.js')
 const Rectangle = require('../visuals/rectangle.js')
 const STATES = require('../states.js')
 const config = require('../../config.js')
-const firstTo = 3
+const firstTo = 9
 
 module.exports = class Score extends GameObject {
   constructor({
