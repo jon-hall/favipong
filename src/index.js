@@ -19,9 +19,18 @@ async function start() {
   }
   document.body.appendChild(canvas)
 
+  let favicon = document.querySelector('link[rel*="icon"]')
+
+  if(!favicon) {
+    favicon = document.createElement('link')
+    favicon.type = 'image/x-icon'
+    favicon.rel = 'shortcut icon'
+    document.head.appendChild(favicon)
+  }
+
   const game = new Game({
     canvas,
-    favicon: document.querySelector('#favicon'),
+    favicon,
     firepeer
   })
   game.start()
