@@ -907,18 +907,16 @@ return module.exports;
 __modules[9] = function(module, exports) {
 const Paddle = __require(15,9)
 const Rectangle = __require(14,9)
-const KEYCODE_UP_ARROW = 38
-const KEYCODE_DOWN_ARROW = 40
-const KEYCODE_APOSTROPHE = 192
-const KEYCODE_FORWARD_SLASH = 191
+const KEY_APOSTROPHE = "'"
+const KEY_FORWARD_SLASH = "/"
 
 module.exports = class LocalPaddle extends Paddle {
   constructor({
     colour,
     x,
     y,
-    upKey = KEYCODE_APOSTROPHE,
-    downKey = KEYCODE_FORWARD_SLASH
+    upKey = KEY_APOSTROPHE,
+    downKey = KEY_FORWARD_SLASH
   } = {}) {
     super({
       colour,
@@ -992,7 +990,7 @@ module.exports = class LocalPaddle extends Paddle {
     })
   }
   onKeydown(event) {
-    switch(event.which) {
+    switch(event.key) {
       case this.upKey:
         this.vy = -this.speed
         break
@@ -1003,7 +1001,7 @@ module.exports = class LocalPaddle extends Paddle {
   }
 
   onKeyup(event) {
-    switch(event.which) {
+    switch(event.key) {
       case this.upKey:
         this.vy = 0
         break

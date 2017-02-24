@@ -1,17 +1,15 @@
 const Paddle = require('./paddle.js')
 const Rectangle = require('../visuals/rectangle.js')
-const KEYCODE_UP_ARROW = 38
-const KEYCODE_DOWN_ARROW = 40
-const KEYCODE_APOSTROPHE = 192
-const KEYCODE_FORWARD_SLASH = 191
+const KEY_APOSTROPHE = "'"
+const KEY_FORWARD_SLASH = "/"
 
 module.exports = class LocalPaddle extends Paddle {
   constructor({
     colour,
     x,
     y,
-    upKey = KEYCODE_APOSTROPHE,
-    downKey = KEYCODE_FORWARD_SLASH
+    upKey = KEY_APOSTROPHE,
+    downKey = KEY_FORWARD_SLASH
   } = {}) {
     super({
       colour,
@@ -102,7 +100,7 @@ module.exports = class LocalPaddle extends Paddle {
 
   // TODO: Update these to deal with multi-press again!
   onKeydown(event) {
-    switch(event.which) {
+    switch(event.key) {
       case this.upKey:
         this.vy = -this.speed
         break
@@ -113,7 +111,7 @@ module.exports = class LocalPaddle extends Paddle {
   }
 
   onKeyup(event) {
-    switch(event.which) {
+    switch(event.key) {
       case this.upKey:
         this.vy = 0
         break
