@@ -180,7 +180,7 @@
         <script src="js/index.js" charset="utf-8"></script>
         <script type="text/javascript">
             // Create our script-loading bookmarklet
-            document.querySelector('#link').href = 'javascript:(function()%7Bfunction%20callback()%7Balert(%22test!%22)%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22' +
+            document.querySelector('#link').href = 'javascript:(function()%7Bfunction%20callback()%7B%7Dvar%20s%3Ddocument.createElement(%22script%22)%3Bs.src%3D%22' +
             encodeURIComponent(window.location.href.replace('index.html', '') + 'js/index.js') +
             '%22%3Bif(s.addEventListener)%7Bs.addEventListener(%22load%22%2Ccallback%2Cfalse)%7Delse%20if(s.readyState)%7Bs.onreadystatechange%3Dcallback%7Ddocument.body.appendChild(s)%3B%7D)()'
         </script>

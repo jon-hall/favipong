@@ -2,14 +2,16 @@ const Paddle = require('./paddle.js')
 const Rectangle = require('../visuals/rectangle.js')
 const KEYCODE_UP_ARROW = 38
 const KEYCODE_DOWN_ARROW = 40
+const KEYCODE_APOSTROPHE = 192
+const KEYCODE_FORWARD_SLASH = 191
 
 module.exports = class LocalPaddle extends Paddle {
   constructor({
     colour,
     x,
     y,
-    upKey = KEYCODE_UP_ARROW,
-    downKey = KEYCODE_DOWN_ARROW
+    upKey = KEYCODE_APOSTROPHE,
+    downKey = KEYCODE_FORWARD_SLASH
   } = {}) {
     super({
       colour,
