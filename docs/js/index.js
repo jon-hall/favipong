@@ -51,45 +51,49 @@ function __getDirname(path) {
 /********** End of header **********/
 /********** Start module 0: C:\Repos\favipong\src\index.js **********/
 __modules[0] = function(module, exports) {
-const loadScript = __require(1,0)
-const debug = __require(2,0)('main')
-const FirePeer = __require(3,0)
+if(!window.__FAVIPONG) {
+  const loadScript = __require(1,0)
+  const debug = __require(2,0)('main')
+  const FirePeer = __require(3,0)
 
-const Game = __require(4,0)
+  const Game = __require(4,0)
 
-async function start() {
-  await loadScript('https://cdnjs.cloudflare.com/ajax/libs/simple-peer/6.4.3/simplepeer.min.js')
-  await loadScript('https://www.gstatic.com/firebasejs/3.6.9/firebase.js')
-  debug('scripts loaded!')
+  async function start() {
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/simple-peer/6.4.3/simplepeer.min.js')
+    await loadScript('https://www.gstatic.com/firebasejs/3.6.9/firebase.js')
+    debug('scripts loaded!')
 
-  const firepeer = new FirePeer()
+    const firepeer = new FirePeer()
 
-  const canvas = document.createElement('canvas')
-  canvas.width = canvas.height = 28
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 28
 
-  if(!window.DEBUG) {
-    canvas.style.display = 'none'
+    if(!window.DEBUG) {
+      canvas.style.display = 'none'
+    }
+    document.body.appendChild(canvas)
+
+    let favicon = document.querySelector('link[rel*="icon"]')
+
+    if(!favicon) {
+      favicon = document.createElement('link')
+      favicon.type = 'image/x-icon'
+      favicon.rel = 'shortcut icon'
+      document.head.appendChild(favicon)
+    }
+
+    const game = new Game({
+      canvas,
+      favicon,
+      firepeer
+    })
+    game.start()
   }
-  document.body.appendChild(canvas)
 
-  let favicon = document.querySelector('link[rel*="icon"]')
+  start()
 
-  if(!favicon) {
-    favicon = document.createElement('link')
-    favicon.type = 'image/x-icon'
-    favicon.rel = 'shortcut icon'
-    document.head.appendChild(favicon)
-  }
-
-  const game = new Game({
-    canvas,
-    favicon,
-    firepeer
-  })
-  game.start()
+  window.__FAVIPONG = true
 }
-
-start()
 
 return module.exports;
 }
