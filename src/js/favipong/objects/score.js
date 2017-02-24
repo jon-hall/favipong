@@ -3,6 +3,7 @@ const Text = require('./text.js')
 const Rectangle = require('../visuals/rectangle.js')
 const STATES = require('../states.js')
 const config = require('../../config.js')
+const firstTo = 3
 
 module.exports = class Score extends GameObject {
   constructor({
@@ -101,5 +102,17 @@ module.exports = class Score extends GameObject {
     this.scores.player2 = player2
 
     this._refreshScoresText()
+  }
+
+  whoWon() {
+    if(this.scores.player1 >= firstTo) {
+      return 1
+    }
+
+    if(this.scores.player2 >= firstTo) {
+      return 2
+    }
+
+    return 0
   }
 }

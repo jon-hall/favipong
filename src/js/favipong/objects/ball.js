@@ -2,6 +2,7 @@ const GameObject = require('./game-object.js')
 const Paddle = require('./paddle.js')
 const Rectangle = require('../visuals/rectangle.js')
 const STATES = require('../states.js')
+const scoringDebug = require('../../debug.js')('scoring')
 
 module.exports = class Ball extends GameObject {
   constructor({
@@ -45,9 +46,11 @@ module.exports = class Ball extends GameObject {
     const result = this.adjustPosition({ game })
     switch(result.bounceX) {
       case 1:
+        scoringDebug('player 1 score', JSON.stringify(this))
         game.addScore({ player: 1 })
         break
       case -1:
+        scoringDebug('player 2 score', JSON.stringify(this))
         game.addScore({ player: 2 })
         break
     }

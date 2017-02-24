@@ -98,17 +98,14 @@ module.exports = class LocalPaddle extends Paddle {
     })
   }
 
+  // TODO: Update these to deal with multi-press again!
   onKeydown(event) {
     switch(event.which) {
       case this.upKey:
-        if(this.vy >= 0) {
-          this.vy -= this.speed
-        }
+        this.vy = -this.speed
         break
       case this.downKey:
-        if(this.vy <= 0) {
-          this.vy += this.speed
-        }
+        this.vy = this.speed
         break
     }
   }
@@ -116,10 +113,10 @@ module.exports = class LocalPaddle extends Paddle {
   onKeyup(event) {
     switch(event.which) {
       case this.upKey:
-        this.vy += this.speed
+        this.vy = 0
         break
       case this.downKey:
-        this.vy -= this.speed
+        this.vy = 0
         break
     }
   }

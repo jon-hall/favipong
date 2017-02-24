@@ -4,11 +4,17 @@ const Ball = require('./objects/ball.js')
 const LocalPaddle = require('./objects/local-paddle.js')
 const RemotePaddle = require('./objects/remote-paddle.js')
 const Score = require('./objects/score.js')
+const ResultScreen = require('./objects/result-screen.js')
 const config = require('../config.js')
-const debug = require('../debug.js')
+const debugFactory = require('../debug.js')
+const serveDebug = debugFactory('serve')
+const scoreDebug = debugFactory('score')
+const debug = debugFactory('game-main')
 
 module.exports = class Game {
   constructor({ canvas, favicon, firepeer }) {
+    this._attachAbandonHook()
+
     this.canvas = canvas
     this.context = canvas.getContext('2d')
     this.width = canvas.width
@@ -43,6 +49,9 @@ module.exports = class Game {
 
     this.scoreboard = new Score()
     this.stage.add(this.scoreboard)
+
+    this.resultScreen = new ResultScreen()
+    this.stage.add(this.resultScreen)
 
     // Prepare the game for launch by pushing the 'searching' state, then the 'paused' state
     this.pushState(STATES.SEARCHING)
@@ -85,6 +94,27 @@ module.exports = class Game {
       width: this.width,
       height: this.height
     })
+  }
+
+  _attachAbandonHook() {
+    let lastShift
+
+    window.addEventListener('keydown', (event) => {
+      if(event.code === 'ShiftLeft') {
+        const now = performance.now()
+        if(lastShift && (now - lastShift < 500)) {
+          this._abandon()
+        } else {
+          lastShift = now
+        }
+      }
+    })
+  }
+
+  _abandon() {
+    this.pause()
+    this.stage.destroy()
+    this.favicon.href = this.__faviconCache
   }
 
   _runLoop() {
@@ -164,11 +194,15 @@ module.exports = class Game {
   _setupPaddle1(paddle) {
     paddle.x = 1
     paddle.y = 8
+    paddle.vx = 0
+    paddle.vy = 0
   }
 
   _setupPaddle2(paddle) {
     paddle.x = 24
     paddle.y = 8
+    paddle.vx = 0
+    paddle.vy = 0
   }
 
   async _onPeerData(event) {
@@ -179,6 +213,8 @@ module.exports = class Game {
           return
         }
 
+        serveDebug('remote:serve-sync', JSON.stringify(event.data))
+
         // Else, configure our serve and respond with an ack message
         this._configureServe(event.data)
         await this.peer.send({ type: 'serve-ack' })
@@ -187,10 +223,18 @@ module.exports = class Game {
 
       // TODO: Handle tick/score/hit data events (some of these can be handled in the affected objects...)
       case 'score':
-        if(this._isPlayerLocal(event.data.player)) {
+        if(!this._isPlayerLocal(event.data.player)) {
           // Getting a score event from the local player is clearly some kind of error...
           return
         }
+
+        // Pop out of playing state (into paused state) while we sync scores
+        while(this.state !== STATES.PAUSED) {
+          this.popState()
+        }
+        debug('addScore:paused')
+
+        scoreDebug('remote:score-sync', JSON.stringify(event.data))
 
         // Send back our ack
         await this.peer.send({ type: 'score-ack' })
@@ -215,17 +259,17 @@ module.exports = class Game {
 
   async addScore({ player }) {
     debug('addScore')
+    if(this._isPlayerLocal(player)) {
+      // When we think remote player scored, we bail, and allow their 'score' message to trigger an
+      // update
+      return
+    }
+
     // Pop out of playing state (into paused state) while we sync scores
     while(this.state !== STATES.PAUSED) {
       this.popState()
     }
     debug('addScore:paused')
-
-    if(!this._isPlayerLocal(player)) {
-      // When we think remote player scored, we bail, and allow their 'score' message to trigger an
-      // update
-      return
-    }
 
     // When local player scores, we send a message to our peer to inform them and wait on an ack
     try {
@@ -263,6 +307,13 @@ module.exports = class Game {
     // If local player scored, then send score message, await ack, then update score
     // If remote scored, await score message, then update score and respond with ack
     setTimeout(async () => {
+      const winner = this._whoWon()
+      if(winner) {
+        this.popState()
+        this._finishGame(this._isPlayerLocal(winner))
+        return
+      }
+
       this.popState()
 
       await this._resetServe()
@@ -273,6 +324,14 @@ module.exports = class Game {
     // Send a message to peer detailing score event, and the resulting scores
     const player1 = this.scoreboard.scores.player1 + (player === 1 ? 1 : 0)
     const player2 = this.scoreboard.scores.player2 + (player === 2 ? 1 : 0)
+
+    scoreDebug('local:score-sync', JSON.stringify({
+      player,
+      scores: {
+        player1,
+        player2
+      }
+    }))
 
     await this.peer.send({
       type: 'score',
@@ -307,6 +366,15 @@ module.exports = class Game {
     this.ball.reset()
     this._setupPaddles()
 
+    serveDebug('local:serve-sync', JSON.stringify({
+      ball: {
+        x: this.ball.x,
+        y: this.ball.y,
+        vx: this.ball.vx,
+        vy: this.ball.vy
+      }
+    }))
+
     await this.peer.send({
       type: 'serve',
       data: {
@@ -339,5 +407,14 @@ module.exports = class Game {
     setTimeout(() => {
       this.pushState(STATES.PLAYING)
     }, 1000)
+  }
+
+  _whoWon() {
+    return this.scoreboard.whoWon()
+  }
+
+  _finishGame(didWeWin) {
+    this.resultScreen.setResult(didWeWin)
+    this.pushState(STATES.COMPLETE)
   }
 }

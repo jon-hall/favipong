@@ -1,5 +1,5 @@
 const config = require('./config.js')
-const debug = require('./debug.js')
+const debug = require('./debug.js')('firepeer')
 
 module.exports = class FirePeer {
   async connect() {

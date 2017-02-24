@@ -10,6 +10,8 @@ module.exports = {
     players: {
       local: 'rgb(0, 180, 255)',
       remote: 'orange'
-    }
+    },
+    win: 'rgb(0, 255, 60)',
+    lose: 'rgb(255, 0, 0)'
   }
 }
